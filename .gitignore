@@ -1,0 +1,79 @@
+# Emacs specific
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+auto-save-list
+tramp
+.\#*
+*#~#
+\#*#
+
+# Org-mode
+*.org~
+*.org_archive
+
+# Customization and backup files
+backup/
+history
+places
+recentf
+auto-save-list/
+auto-save/
+!*.el  # Don't ignore elisp files
+
+# Package management
+elpa/
+!*.el  # Don't ignore elisp files
+
+# Emacs Native Compilation (Emacs 28+)
+eln-cache/
+
+# Tree-sitter grammars and cache
+tree-sitter/
+treesit/
+grammar.js
+
+# Eshell history and configuration
+eshell/
+
+# Snippets
+snippets/
+
+# Emacs session files
+.session
+.uptimes.el
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Node.js / Frontend (if you develop packages locally)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+build/
+.npm/
+.yarn/
+.pnp.*
+.pnp.js
+
+# IDE specific
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
