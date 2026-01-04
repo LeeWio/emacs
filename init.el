@@ -352,6 +352,65 @@
 ;;; ------------------------------------------------------------
 (message "Init.el loaded successfully with icons, corfu, eglot, treemacs, catppuccin!")
 
+;;; ------------------------------------------------------------
+;;; Clipboard integration (Wayland, X11, macOS, GUI)
+;;; ------------------------------------------------------------
+(defun my/setup-clipboard ()
+  "Setup system clipboard integration for Wayland, X11, macOS, and GUI Emacs."
+  (cond
+   ;; Wayland terminal
+   ((and (not (display-graphic-p))
+         (string-equal (getenv "XDG_SESSION_TYPE") "wayland")
+         (executable-find "wl-copy")
+         (executable-find "wl-paste"))
+    (setq interprogram-cut-function
+          (lambda (text &optional push)
+            (when text
+              (let ((process-connection-type nil))
+                (let ((proc (start-process "wl-copy" nil "wl-copy" "-f")))
+                  (process-send-string proc text)
+                  (process-send-eof proc)))))
+          interprogram-paste-function
+          (lambda ()
+            (let ((output (string-trim (shell-command-to-string "wl-paste -n"))))
+              (unless (string-empty-p output)
+                output)))))
+
+   ;; X11 terminal
+   ((and (not (display-graphic-p))
+         (executable-find "xclip"))
+    (setq interprogram-cut-function
+          (lambda (text &optional push)
+            (when text
+              (let ((process-connection-type nil))
+                (let ((proc (start-process "xclip" nil "xclip" "-selection" "clipboard")))
+                  (process-send-string proc text)
+                  (process-send-eof proc)))))
+          interprogram-paste-function
+          (lambda ()
+            (let ((output (string-trim (shell-command-to-string "xclip -selection clipboard -o"))))
+              (unless (string-empty-p output)
+                output)))))
+
+   ;; macOS (terminal or GUI)
+   ((eq system-type 'darwin)
+    (setq interprogram-cut-function
+          (lambda (text &optional push)
+            (when text
+              (let ((process-connection-type nil))
+                (let ((proc (start-process "pbcopy" nil "pbcopy")))
+                  (process-send-string proc text)
+                  (process-send-eof proc)))))
+          interprogram-paste-function
+          (lambda ()
+            (let ((output (string-trim (shell-command-to-string "pbpaste"))))
+              (unless (string-empty-p output)
+                output)))))))
+
+;; 自动执行
+(my/setup-clipboard)
+
+
 (provide 'init)
 ;;; init.el ends here
 (custom-set-variables
