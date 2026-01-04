@@ -466,18 +466,6 @@
   :straight t
   :bind ("C-:" . avy-goto-char-timer))
 
-(use-package all-the-icons-dired
-  :straight t
-  :hook (dired-mode . all-the-icons-dired-mode))
-
-(use-package centaur-tabs
-  :straight t
-  :init
-  (centaur-tabs-mode t)
-  :custom
-  (centaur-tabs-style "bar")
-  (centaur-tabs-set-icons t))
-
 (use-package doom-modeline
   :straight t
   :init (doom-modeline-mode 1)
@@ -500,6 +488,20 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(default ((t (:inherit nil :extend nil :stipple nil :background "unspecified" :foreground "#cdd6f4" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 1 :width normal :foundry "default" :family "default"))))
+ '(corfu-bar ((t (:background "unspecified"))))
+ '(corfu-current ((t (:extend t :background "gray1"))))
+ '(corfu-default ((t (:background "unspecified"))))
+ '(git-gutter:added ((t (:foreground "#A6E3A1" :background nil :weight bold))))
+ '(git-gutter:deleted ((t (:foreground "#F38BA8" :background nil :weight bold))))
+ '(git-gutter:modified ((t (:foreground "#F9E2AF" :background nil :weight bold))))
+ '(hl-line ((t (:extend t :background "gray1"))))
  '(line-number ((t (:inherit default :background "unspecified" :foreground "#45475a"))))
  '(mode-line ((t (:background "unspecified"))))
- '(scroll-bar ((t nil))))
+ '(mode-line-highlight ((t (:inherit highlight))))
+ '(scroll-bar ((t nil)))
+ '(tab-bar ((t (:background "unspecified" :foreground "#a6adc8"))))
+ '(tab-bar-tab ((t (:background "unspecified" :foreground "#cdd6f4"))))
+ '(tab-bar-tab-ungrouped ((t (:inherit (shadow tab-bar-tab-inactive)))))
+ '(tab-line ((t (:inherit tab-bar))))
+ '(treemacs-root-face ((t (:background "unspecified" :foreground "#89b4fa"))))
+ '(treemacs-window-background-face ((t (:background "unspecified")))))
