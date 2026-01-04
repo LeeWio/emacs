@@ -218,25 +218,20 @@
   (define-key eglot-mode-map (kbd "C-c i") #'eglot-find-implementation)
   (define-key eglot-mode-map (kbd "C-c e") #'eglot-find-declaration))
 
-;; ------------------------------------------------------------
-;; Emacs Lisp — built-in Eglot LSP (NO external server)
-;; ------------------------------------------------------------
-
-;; Emacs Lisp 使用 Eglot 内置服务器
+;;; ------------------------------------------------------------
+;;; Emacs Lisp — built-in Eglot LSP (NO external server)
+;;; ------------------------------------------------------------
 (add-hook 'emacs-lisp-mode-hook #'eglot-ensure)
-
 (add-hook 'emacs-lisp-mode-hook
           (lambda ()
-            ;; 和你 C/C++ 风格保持一致：安静、不打扰
             (setq-local eldoc-mode nil
                         eldoc-documentation-strategy nil
                         eldoc-echo-area-use-multiline-p nil
                         flymake-show-diagnostics-at-end-of-line nil)))
 
-;; ------------------------------------------------------------
-;; Java — Eglot + Homebrew jdtls (macOS)
-;; ------------------------------------------------------------
-
+;;; ------------------------------------------------------------
+;;; Java — Eglot + jdtls
+;;; ------------------------------------------------------------
 (use-package eglot
   :hook (java-mode . eglot-ensure)
   :config
@@ -244,10 +239,46 @@
    'eglot-server-programs
    `(java-mode .
      ("jdtls"
-      ;; workspace（必须，不然经常 server died）
       "-data" ,(expand-file-name "~/.cache/jdtls-workspace/")))))
 
+;;; ------------------------------------------------------------
+;;; TypeScript / TSX / JavaScript
+;;; ------------------------------------------------------------
+(add-to-list 'auto-mode-alist '("\\.ts\\'"  . typescript-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.js\\'"  . js-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.jsx\\'" . js-ts-mode))
 
+(setq treesit-extra-load-path '("~/.emacs.d/tree-sitter-libs/"))
+
+(when (treesit-available-p)
+  (dolist (lang '((typescript "libtree-sitter-typescript.dylib")
+                  (tsx        "libtree-sitter-tsx.dylib")))
+    (let ((lang-name (car lang))
+          (lib-path (expand-file-name (cadr lang) "~/.emacs.d/tree-sitter-libs/")))
+      (unless (treesit-language-available-p lang-name)
+        (ignore-errors
+          (treesit-load-language-grammar lang-name lib-path))))))
+
+(when (treesit-available-p)
+  (add-to-list 'major-mode-remap-alist '(typescript-ts-mode . typescript-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(tsx-ts-mode . tsx-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(js-ts-mode . js-ts-mode)))
+
+(use-package eglot
+  :defer nil
+  :hook ((typescript-ts-mode tsx-ts-mode js-ts-mode) . eglot-ensure)
+  :config
+  (add-to-list 'eglot-server-programs
+               '((typescript-ts-mode tsx-ts-mode js-ts-mode)
+                 . ("typescript-language-server" "--stdio")))
+
+  ;; 自动保存时格式化
+  (dolist (hook '(typescript-ts-mode-hook tsx-ts-mode-hook js-ts-mode-hook))
+    (add-hook hook (lambda () (setq-local eglot-format-buffer-on-save t))))
+
+  ;; 安静模式，不打扰
+  (setq eglot-ignored-server-capabilities '(:hoverProvider :signatureHelpProvider)))
 
 ;;; ------------------------------------------------------------
 ;;; 项目浏览 / 模糊搜索 (Treemacs + Vertico + Consult)
@@ -266,17 +297,12 @@
 (projectile-mode +1)
 (setq projectile-completion-system 'default)
 
-;; Treemacs
 (setq treemacs-follow-after-init t
       treemacs-is-never-other-window t
       treemacs-width 30)
 (global-set-key (kbd "C-c t") 'treemacs)
 (global-set-key (kbd "C-c T") 'treemacs-toggle)
-
-;; Projectile + Treemacs 集成
 (treemacs-projectile)
-
-;; Consult 快捷键
 (global-set-key (kbd "C-x b") 'consult-buffer)
 (global-set-key (kbd "C-x C-f") 'consult-find)
 (global-set-key (kbd "M-g g") 'consult-goto-line)
@@ -322,14 +348,12 @@
 ;;; ------------------------------------------------------------
 ;;; 窗口管理插件
 ;;; ------------------------------------------------------------
-;; ace-window
 (use-package ace-window
   :straight t
   :bind ("M-o" . ace-window)
   :config
   (setq aw-scope 'global))
 
-;; buffer-move
 (use-package buffer-move
   :straight t
   :bind (("C-c <up>"    . buf-move-up)
@@ -337,36 +361,32 @@
          ("C-c <left>"  . buf-move-left)
          ("C-c <right>" . buf-move-right)))
 
-;; eyebrowse
 (use-package eyebrowse
   :straight t
   :config
   (eyebrowse-mode t)
   (setq eyebrowse-new-workspace t))
 
-;; -----------------------------
-;; Nerd Icons
-;; -----------------------------
+;;; ------------------------------------------------------------
+;;; Nerd Icons
+;;; ------------------------------------------------------------
 (use-package nerd-icons
   :straight t)
 
-;; Treemacs 图标
 (use-package treemacs
   :after nerd-icons
   :straight t
   :config
-  ;; 设置 Treemacs 文件夹图标
   (setq treemacs-icon-open (nerd-icons-icon-for-dir "folder-open"))
   (setq treemacs-icon-closed (nerd-icons-icon-for-dir "folder")))
 
-;; Dired 图标
 (use-package nerd-icons-dired
   :straight t
   :hook (dired-mode . nerd-icons-dired-mode))
 
-;; -----------------------------
-;; Corfu + Kind-Icon
-;; -----------------------------
+;;; ------------------------------------------------------------
+;;; Corfu + Kind-Icon
+;;; ------------------------------------------------------------
 (use-package kind-icon
   :straight t
   :after corfu
@@ -377,42 +397,29 @@
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
 ;;; ------------------------------------------------------------
-;;; Git integration (Git Gutter)
+;;; Git integration
 ;;; ------------------------------------------------------------
-
-;; -----------------------------
-;; Magit
-;; -----------------------------
 (use-package magit
   :straight t
   :bind (("C-x g" . magit-status)
          ("C-x M-g" . magit-dispatch)))
 
-;; -----------------------------
-;; Git Gutter
-;; -----------------------------
 (use-package git-gutter
   :straight t
   :diminish
   :hook (prog-mode . git-gutter-mode)
   :config
-  ;; 自动刷新
-  (setq git-gutter:update-interval 2) ; 每 2 秒刷新一次
-  ;; 颜色和符号
+  (setq git-gutter:update-interval 2)
   (custom-set-faces
    '(git-gutter:added    ((t (:foreground "#A6E3A1" :background nil :weight bold))))
    '(git-gutter:modified ((t (:foreground "#F9E2AF" :background nil :weight bold))))
    '(git-gutter:deleted  ((t (:foreground "#F38BA8" :background nil :weight bold)))))
-  ;; 快捷键
   (global-set-key (kbd "C-x v =") 'git-gutter:popup-hunk)
   (global-set-key (kbd "C-x p") 'git-gutter:previous-hunk)
   (global-set-key (kbd "C-x n") 'git-gutter:next-hunk)
   (global-set-key (kbd "C-x v s") 'git-gutter:stage-hunk)
   (global-set-key (kbd "C-x v r") 'git-gutter:revert-hunk))
 
-;;; ------------------------------------------------------------
-;;; Git Blame Inline (blamer.el)
-;;; ------------------------------------------------------------
 (use-package blamer
   :ensure t
   :bind (("s-i" . blamer-show-commit-info)
@@ -430,12 +437,11 @@
   (global-blamer-mode 1))
 
 ;;; ------------------------------------------------------------
-;;; Clipboard integration (Wayland, X11, macOS, GUI)
+;;; Clipboard integration
 ;;; ------------------------------------------------------------
 (defun my/setup-clipboard ()
   "Setup system clipboard integration for Wayland, X11, macOS, and GUI Emacs."
   (cond
-   ;; Wayland terminal
    ((and (not (display-graphic-p))
          (string-equal (getenv "XDG_SESSION_TYPE") "wayland")
          (executable-find "wl-copy")
@@ -443,53 +449,46 @@
     (setq interprogram-cut-function
           (lambda (text &optional push)
             (when text
-              (let ((process-connection-type nil))
-                (let ((proc (start-process "wl-copy" nil "wl-copy" "-f")))
-                  (process-send-string proc text)
-                  (process-send-eof proc)))))
+              (let ((proc (start-process "wl-copy" nil "wl-copy" "-f")))
+                (process-send-string proc text)
+                (process-send-eof proc))))
           interprogram-paste-function
           (lambda ()
             (let ((output (string-trim (shell-command-to-string "wl-paste -n"))))
               (unless (string-empty-p output)
                 output)))))
 
-   ;; X11 terminal
    ((and (not (display-graphic-p))
          (executable-find "xclip"))
     (setq interprogram-cut-function
           (lambda (text &optional push)
             (when text
-              (let ((process-connection-type nil))
-                (let ((proc (start-process "xclip" nil "xclip" "-selection" "clipboard")))
-                  (process-send-string proc text)
-                  (process-send-eof proc)))))
+              (let ((proc (start-process "xclip" nil "xclip" "-selection" "clipboard")))
+                (process-send-string proc text)
+                (process-send-eof proc))))
           interprogram-paste-function
           (lambda ()
             (let ((output (string-trim (shell-command-to-string "xclip -selection clipboard -o"))))
               (unless (string-empty-p output)
                 output)))))
 
-   ;; macOS (terminal or GUI)
    ((eq system-type 'darwin)
     (setq interprogram-cut-function
           (lambda (text &optional push)
             (when text
-              (let ((process-connection-type nil))
-                (let ((proc (start-process "pbcopy" nil "pbcopy")))
-                  (process-send-string proc text)
-                  (process-send-eof proc)))))
+              (let ((proc (start-process "pbcopy" nil "pbcopy")))
+                (process-send-string proc text)
+                (process-send-eof proc))))
           interprogram-paste-function
           (lambda ()
             (let ((output (string-trim (shell-command-to-string "pbpaste"))))
               (unless (string-empty-p output)
                 output)))))))
 
-;; 自动执行
 (my/setup-clipboard)
 
 (use-package rg
   :straight t)
-;; 在 Consult 中使用
 (setq consult-ripgrep-args "rg --no-heading --line-number --color=always %s")
 
 (use-package avy
@@ -503,8 +502,9 @@
   (doom-modeline-height 25)
   (doom-modeline-bar-width 5))
 
-
 (provide 'init)
+;;; init.el ends here
+
 ;;; init.el ends here
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
