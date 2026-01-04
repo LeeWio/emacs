@@ -1,32 +1,12 @@
-;;; early-init.el --- Early initialization -*- lexical-binding: t -*-
+;;; early-init.el --- early startup config -*- lexical-binding: t; -*-
 
-;;; Commentary:
-;; Early initialization to maximize performance
-
-;;; Code:
-
-;; Disable GUI elements early
-(push '(menu-bar-lines . 0) default-frame-alist)
-(push '(tool-bar-lines . 0) default-frame-alist)
-(push '(vertical-scroll-bars) default-frame-alist)
-(push '(horizontal-scroll-bars) default-frame-alist)
-
-;; Resize frame early
-(push '(width . 120) default-frame-alist)
-(push '(height . 40) default-frame-alist)
-
-;; Disable package initialization
+;; 禁用 package.el（避免和 straight.el 冲突）
 (setq package-enable-at-startup nil)
 
-;; Prefer loading .el files over .elc files to avoid bytecode issues
-(setq load-prefer-newer t)
+;; 启动阶段少点垃圾
+(setq inhibit-startup-screen t)
+(setq inhibit-startup-message t)
+(setq inhibit-startup-echo-area-message t)
 
-;; Garbage collection during startup
-(setq gc-cons-threshold (* 100 1024 1024))
-(setq gc-cons-percentage 0.1)
-
-;; Frame resizing
-(setq frame-inhibit-implied-resize t)
-
-(provide 'early-init)
-;;; early-init.el ends here
+;; 减少 GC 压力（启动更快）
+(setq gc-cons-threshold most-positive-fixnum)

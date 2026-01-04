@@ -1,1 +1,1 @@
-("~/Developer/project/sunrise/" "/Users/wei.li/.emacs.d/")
+("~/.emacs.d/" "~/Downloads/demo/" "~/Downloads/heroui/")

@@ -2,72 +2,55 @@
 
 This file provides guidance to Qoder (qoder.com) when working with code in this repository.
 
-## Codebase Overview
+## Project Overview
 
-This is a high-performance, modular Emacs configuration focused on performance optimization with a Catppuccin Mocha theme and transparent background. The configuration uses a modular architecture with separate modules for different functionality.
+This is an Emacs configuration directory (`.emacs.d`) optimized for C/C++ development with advanced features including LSP support, completion, and project navigation.
 
 ## Architecture
 
-### Directory Structure
-```
-.
-├── early-init.el          # Pre-startup initialization (GUI disable, etc.)
-├── init.el                # Main configuration entry point
-├── config/                # Personal configuration files
-│   └── custom.el          # Custom settings
-└── modules/               # Feature modules
-    ├── core/              # Core configuration
-    ├── ui/                # UI configuration  
-    ├── lang/              # Language support
-    ├── tools/             # Tool configuration
-    ├── perf/              # Performance optimization
-    ├── lsp/               # LSP and completion system
-    ├── lsp/lang/          # Language-specific LSP config
-    └── keybindings/       # Keybinding configuration
-```
+- **Package Management**: Uses `straight.el` with `use-package` for declarative configuration
+- **Core Configuration**: Split between `early-init.el` (startup optimizations) and `init.el` (main configuration)
+- **Language Support**: C/C++ with `eglot` LSP client and `clangd` server
+- **Completion**: `corfu` for completion UI with `orderless` for flexible matching
+- **Project Navigation**: Built-in project.el with `find-file-in-project` extension
 
-### Module Structure
-- **core/**: Core Emacs settings (encoding, backup, history, line numbers, highlighting, smooth scrolling)
-- **ui/**: User interface (Catppuccin theme, transparency, VS Code-style mode line)
-- **lang/**: Programming language support configuration
-- **tools/**: Development tools (which-key, git integration with Magit)
-- **perf/**: Performance tuning and optimization settings
-- **lsp/**: LSP client (currently using eglot) and completion system (corfu)
-- **keybindings/**: Keyboard shortcuts and keymap configuration
+## Key Features
 
-### Main Entry Points
-- `init.el`: Loads all modules in sequence
-- Each module has an `*-init.el` file that requires the individual components
-- Package management via `use-package` with MELPA/ELPA sources
+- C/C++ development with Eglot + clangd
+- Advanced completion with Corfu
+- Project navigation and file switching
+- Tree-sitter syntax highlighting
+- Flymake for on-the-fly syntax checking
 
 ## Development Commands
 
-### Testing Configuration
-- To test configuration changes: Start Emacs normally - configuration loads automatically
-- To test specific modules: `(require 'module-name)` in Emacs eval
-- To test configuration syntax: `emacs --batch --eval "(load-file \"init.el\")"`
-- To start Emacs in terminal mode: `emacs -nw`
+Since this is an Emacs configuration:
 
-### Performance Testing
-- Performance metrics are built into the configuration via `perf-init.el`
-- GC threshold and process output limits are optimized for performance
-- Large file handling with automatic feature disabling
+- **Start Emacs**: `emacs` or `emacs -q -l init.el` to load this configuration
+- **Update packages**: `M-x straight-pull-all` within Emacs
+- **Install new packages**: `M-x straight-use-package` or add to init.el with use-package
+- **Debug configuration**: `M-x toggle-debug-on-error` for troubleshooting
 
-### LSP/Completion System
-- Current setup: eglot (LSP client) + corfu (completion) + corfu-popupinfo + orderless (filtering) + yasnippet + nerd-icons + consult-eglot + eglot-inlay-hints (built-in) + eglot-booster (optional)
-- Language servers configured in `modules/lsp/lang/` (currently C/C++, Java, TypeScript/JavaScript with corresponding language servers)
-- Performance settings in `modules/lsp/lsp-perf.el`
-- Icons for completion provided by nerd-icons with safe loading
-- Mode line icons also use nerd-icons
+## Key Bindings
 
-### Development and Debugging
-- To check package installation status: `M-x list-packages`
-- To reload configuration: `M-x eval-buffer` on the config file you're editing
-- To check configuration loading time: Performance metrics are displayed during startup
-- To debug issues: Check `*Messages*` buffer (`C-h e`)
-- To enable debug mode: Add `(setq debug-on-error t)` temporarily to init.el
+- `C-c o` - Switch between header/source files
+- `C-c C-o` - Enhanced header/source switching with project root
+- `C-c f` - Format buffer or region using LSP
+- `M-.` - Jump to definition (xref)
+- `M-,` - Return from definition (xref)
+- `M-n` - Next Flymake error
+- `M-p` - Previous Flymake error
+- `C-'` - Toggle imenu-list sidebar
+- `TAB` - Navigate completion candidates in Corfu
+- `S-TAB` - Previous completion candidate in Corfu
 
-### Common Package Management
-- To install a new package: `(package-install 'package-name)` or use `use-package` declaration
-- To update packages: `M-x package-list-packages` then `U` to mark all for upgrade, `x` to execute
-- To check installed packages: `M-x package-list-packages`
+## Configuration Structure
+
+- `early-init.el` - Startup optimizations (GC settings, disable startup screen)
+- `init.el` - Main configuration with sections for:
+  - Package management (straight.el + use-package)
+  - Basic editing experience (indentation, backup settings)
+  - Completion (Corfu, orderless)
+  - C/C++ specific setup
+  - LSP configuration (Eglot with clangd)
+  - Project navigation tools

@@ -1,77 +1,363 @@
-;;; init.el --- My Emacs Configuration -*- lexical-binding: t -*-
+;;; init.el --- Optimized C/C++ config with Catppuccin, Corfu, Eglot, Treemacs, Window Management & Icons -*- lexical-binding: t -*-
 
-;; Author: Wei Li
-;; Keywords: convenience
+;;; ------------------------------------------------------------
+;;; 启动优化
+;;; ------------------------------------------------------------
+(setq gc-cons-threshold (* 64 1024 1024))
+(defvar my/original-file-name-handler-alist file-name-handler-alist)
+(setq file-name-handler-alist nil)
 
-;;; Commentary:
-;; High-performance modular Emacs configuration
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (setq gc-cons-threshold (* 16 1024 1024)
+                  file-name-handler-alist my/original-file-name-handler-alist)
+            (message "Emacs ready in %s with %d GCs."
+                     (emacs-init-time) gcs-done)))
 
-;;; Code:
+;;; ------------------------------------------------------------
+;;; straight.el bootstrap
+;;; ------------------------------------------------------------
+(setq package-enable-at-startup nil)
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 6))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+(setq straight-use-package-by-default t)
 
-;; Package management
-(require 'package)
-(setq package-archives
-      '(("gnu"   . "https://elpa.gnu.org/packages/")
-        ("nongnu" . "https://elpa.nongnu.org/nongnu/")
-        ("melpa" . "https://melpa.org/packages/")))
+;;; ------------------------------------------------------------
+;;; use-package
+;;; ------------------------------------------------------------
+(straight-use-package 'use-package)
+(setq use-package-always-defer t)
 
-(package-initialize)
+;;; ------------------------------------------------------------
+;;; Catppuccin 主题
+;;; ------------------------------------------------------------
+(straight-use-package 'catppuccin-theme)
+(setq catppuccin-flavor 'mocha)
+(load-theme 'catppuccin :no-confirm)
 
-;; Install use-package if not already installed
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
+;;; ------------------------------------------------------------
+;;; 基础编辑体验
+;;; ------------------------------------------------------------
+(setq-default
+ indent-tabs-mode nil
+ tab-width 4
+ fill-column 120)
+(setq ring-bell-function 'ignore
+      make-backup-files nil
+      auto-save-default nil)
 
-(eval-when-compile
-  (require 'use-package))
+;;; ------------------------------------------------------------
+;;; 高亮行 + 行号
+;;; ------------------------------------------------------------
+(global-hl-line-mode 1)
 
-;; Performance optimizations
-(setq gc-cons-threshold (* 100 1024 1024)) ; 100MB
-(setq read-process-output-max (* 1024 1024)) ; 1MB
-(setq native-comp-async-report-warnings-errors 'silent)
+(defun my/prog-mode-hook ()
+  "Programming mode hooks: line numbers, relative numbers, electric pair, flymake, imenu."
+  (display-line-numbers-mode 1)
+  (setq display-line-numbers 'relative)
+  (electric-pair-mode 1)
+  (flymake-mode 1)
+  (imenu-add-menubar-index))
 
-;; Load path
-(add-to-list 'load-path (expand-file-name "modules/core" user-emacs-directory))
-(add-to-list 'load-path (expand-file-name "modules/ui" user-emacs-directory))
-(add-to-list 'load-path (expand-file-name "modules/lang" user-emacs-directory))
-(add-to-list 'load-path (expand-file-name "modules/tools" user-emacs-directory))
-(add-to-list 'load-path (expand-file-name "modules/perf" user-emacs-directory))
-(add-to-list 'load-path (expand-file-name "modules/lsp" user-emacs-directory))
-(add-to-list 'load-path (expand-file-name "modules/lsp/lang" user-emacs-directory))
-(add-to-list 'load-path (expand-file-name "modules/keybindings" user-emacs-directory))
+(add-hook 'prog-mode-hook #'my/prog-mode-hook)
 
-;; Core configurations
-(require 'core-init)
+;; Catppuccin 风格行号 & 光标 & 区域选择
+(let ((fg-line "#7f849c")
+      (fg-current "#fab387")
+      (bg-hl "#313244")
+      (bg-region "#585b70"))
+  (set-face-foreground 'line-number fg-line)
+  (set-face-foreground 'line-number-current-line fg-current)
+  (set-face-background 'line-number nil)
+  (set-face-background 'line-number-current-line nil)
+  (set-face-background 'hl-line bg-hl)
+  (set-face-background 'region bg-region)
+  (set-face-foreground 'cursor "#f5a97f"))
 
-;; UI configurations
-(require 'ui-init)
+;;; ------------------------------------------------------------
+;;; 清爽界面
+;;; ------------------------------------------------------------
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+(set-frame-parameter nil 'alpha '(90 . 90))
+(add-to-list 'default-frame-alist '(alpha . (90 . 90)))
 
-;; Language support
-(require 'lang-init)
+;;; ------------------------------------------------------------
+;;; Flymake 快捷键 (手动跳转)
+;;; ------------------------------------------------------------
+(define-key prog-mode-map (kbd "M-n") #'flymake-goto-next-error)
+(define-key prog-mode-map (kbd "M-p") #'flymake-goto-prev-error)
+(setq flymake-show-diagnostics-at-end-of-line nil
+      flymake-no-changes-timeout nil
+      flymake-start-on-flymake-mode nil)
 
-;; Tools configurations
-(require 'tools-init)
+;;; ------------------------------------------------------------
+;;; Completion 基础
+;;; ------------------------------------------------------------
+(setq completion-ignore-case t
+      read-buffer-completion-ignore-case t
+      read-file-name-completion-ignore-case t)
 
-;; Performance tuning
-(require 'perf-init)
+(use-package orderless
+  :init
+  (setq completion-styles '(basic orderless)
+        completion-category-defaults nil
+        completion-category-overrides '((eglot (styles orderless)))))
 
-;; LSP and completion system
-(require 'lsp-init)
+;;; ------------------------------------------------------------
+;;; Corfu 自动补全 + TAB 联动 Yasnippet
+;;; ------------------------------------------------------------
+(use-package corfu-terminal
+  :ensure t
+  :init (corfu-terminal-mode 1))
 
-;; Keybindings configuration
-(require 'keybindings-init)
+(use-package corfu
+  :defer nil
+  :init
+  (setq corfu-auto t
+        corfu-auto-delay 0.1
+        corfu-cycle t
+        corfu-preselect 'prompt)
+  :config
+  (global-corfu-mode 1)
+
+  ;; TAB / Shift-TAB 补全和 snippet 联动
+  (defun my/corfu-yas-or-next ()
+    "如果在 snippet 中跳到下一个 field，否则 corfu-next."
+    (interactive)
+    (if (and (bound-and-true-p yas-minor-mode)
+             (or (yas--templates-for-key-at-point)
+                 (yas--snippets-at-point)))
+        (yas-next-field)
+      (corfu-next)))
+
+  (defun my/corfu-yas-or-previous ()
+    "如果在 snippet 中跳到上一个 field，否则 corfu-previous."
+    (interactive)
+    (if (and (bound-and-true-p yas-minor-mode)
+             (yas--snippets-at-point))
+        (yas-prev-field)
+      (corfu-previous)))
+
+  (define-key corfu-map (kbd "TAB") #'my/corfu-yas-or-next)
+  (define-key corfu-map (kbd "<tab>") #'my/corfu-yas-or-next)
+  (define-key corfu-map (kbd "S-TAB") #'my/corfu-yas-or-previous)
+  (define-key corfu-map (kbd "<backtab>") #'my/corfu-yas-or-previous)
+  (define-key corfu-map (kbd "RET") #'corfu-complete)
+  (define-key corfu-map (kbd "ESC") #'corfu-quit))
+
+;;; Yasnippet
+(use-package yasnippet
+  :straight t
+  :init
+  (yas-global-mode 1))
+
+;;; ------------------------------------------------------------
+;;; C/C++ + Eglot
+;;; ------------------------------------------------------------
+(defun my/find-project-root ()
+  "Find project root using VC or default."
+  (or (vc-root-dir)
+      (locate-dominating-file default-directory ".")
+      default-directory))
+
+(use-package cc-mode
+  :defer nil
+  :mode (("\\.c\\'"   . c-mode)
+         ("\\.h\\'"   . c-mode)
+         ("\\.cpp\\'" . c++-mode)
+         ("\\.hpp\\'" . c++-mode))
+  :init
+  (setq c-basic-offset 4
+        c-default-style "linux")
+  :config
+  (define-key c-mode-base-map (kbd "C-c o") #'ff-find-other-file)
+  (define-key c-mode-base-map (kbd "C-c C-o")
+    (lambda () (interactive)
+      (let ((ff-search-directories
+             (cons (my/find-project-root)
+                   '("." "../include" "../inc" "../src" "../"))))
+        (ff-find-other-file)))))
+
+(use-package eglot
+  :defer nil
+  :hook ((c-mode c++-mode) . eglot-ensure)
+  :config
+  (add-to-list 'eglot-server-programs
+               '((c-mode c++-mode) . ("clangd"
+                                      "--background-index"
+                                      "--clang-tidy"
+                                      "--completion-style=detailed"
+                                      "--header-insertion=never"
+                                      "--pch-storage=memory")))
+
+  ;; 禁用自动 Eldoc 弹窗
+  (setq eldoc-mode nil
+        eldoc-documentation-strategy nil
+        eldoc-echo-area-use-multiline-p nil)
+
+  ;; Flymake 只在手动触发
+  (setq flymake-start-on-flymake-mode nil
+        flymake-no-changes-timeout nil
+        flymake-show-diagnostics-at-end-of-line nil)
+
+  ;; 禁用 Eglot 自动弹窗 signature/help
+  (setq eglot-ignored-server-capabilities '(:hoverProvider :signatureHelpProvider))
+
+  ;; 常用快捷键
+  (define-key eglot-mode-map (kbd "C-c f") #'eglot-format)
+  (define-key eglot-mode-map (kbd "C-c h") #'eglot-hover)
+  (define-key eglot-mode-map (kbd "C-c d") #'flymake-show-buffer-diagnostics)
+  (define-key eglot-mode-map (kbd "M-.") #'xref-find-definitions)
+  (define-key eglot-mode-map (kbd "M-,") #'xref-pop-marker-stack)
+  (define-key eglot-mode-map (kbd "C-c r") #'eglot-rename)
+  (define-key eglot-mode-map (kbd "C-c a") #'eglot-code-actions)
+  (define-key eglot-mode-map (kbd "C-c i") #'eglot-find-implementation)
+  (define-key eglot-mode-map (kbd "C-c e") #'eglot-find-declaration))
+
+
+;;; ------------------------------------------------------------
+;;; 项目浏览 / 模糊搜索 (Treemacs + Vertico + Consult)
+;;; ------------------------------------------------------------
+(straight-use-package 'vertico)
+(vertico-mode 1)
+(straight-use-package 'savehist)
+(savehist-mode 1)
+(straight-use-package 'consult)
+(straight-use-package 'consult-projectile)
+
+(straight-use-package 'treemacs)
+(straight-use-package 'treemacs-projectile)
+(straight-use-package 'treemacs-icons-dired)
+(straight-use-package 'projectile)
+(projectile-mode +1)
+(setq projectile-completion-system 'default)
+
+;; Treemacs
+(setq treemacs-follow-after-init t
+      treemacs-is-never-other-window t
+      treemacs-width 30)
+(global-set-key (kbd "C-c t") 'treemacs)
+(global-set-key (kbd "C-c T") 'treemacs-toggle)
+
+;; Projectile + Treemacs 集成
+(treemacs-projectile)
+
+;; Consult 快捷键
+(global-set-key (kbd "C-x b") 'consult-buffer)
+(global-set-key (kbd "C-x C-f") 'consult-find)
+(global-set-key (kbd "M-g g") 'consult-goto-line)
+(global-set-key (kbd "M-g f") 'consult-flymake)
+(global-set-key (kbd "M-g o") 'consult-outline)
+(global-set-key (kbd "C-s") 'consult-line)
+(global-set-key (kbd "C-c p f") 'consult-projectile)
+
+;;; ------------------------------------------------------------
+;;; imenu-list
+;;; ------------------------------------------------------------
+(use-package imenu-list
+  :straight t
+  :bind ("C-'" . imenu-list-smart-toggle)
+  :init
+  (setq imenu-list-focus-after-activation t
+        imenu-list-auto-resize t
+        imenu-list-size 30
+        imenu-list-refresh-delay 0.5))
+
+;;; ------------------------------------------------------------
+;;; Tree-sitter
+;;; ------------------------------------------------------------
+(when (and (fboundp 'treesit-available-p)
+           (treesit-available-p))
+  (setq treesit-font-lock-level 4))
+
+;;; ------------------------------------------------------------
+;;; Which-Key
+;;; ------------------------------------------------------------
+(use-package which-key
+  :straight t
+  :defer 0
+  :config
+  (which-key-mode 1)
+  (setq which-key-idle-delay 0.4
+        which-key-idle-secondary-delay 0.05
+        which-key-show-early-on-C-h t
+        which-key-max-description-length 40
+        which-key-side-window-location 'bottom
+        which-key-side-window-max-height 0.25))
+
+;;; ------------------------------------------------------------
+;;; 窗口管理插件
+;;; ------------------------------------------------------------
+;; ace-window
+(use-package ace-window
+  :straight t
+  :bind ("M-o" . ace-window)
+  :config
+  (setq aw-scope 'global))
+
+;; buffer-move
+(use-package buffer-move
+  :straight t
+  :bind (("C-c <up>"    . buf-move-up)
+         ("C-c <down>"  . buf-move-down)
+         ("C-c <left>"  . buf-move-left)
+         ("C-c <right>" . buf-move-right)))
+
+;; eyebrowse
+(use-package eyebrowse
+  :straight t
+  :config
+  (eyebrowse-mode t)
+  (setq eyebrowse-new-workspace t))
+
+;; -----------------------------
+;; Nerd Icons
+;; -----------------------------
+(use-package nerd-icons
+  :straight t)
+
+;; Treemacs 图标
+(use-package treemacs
+  :after nerd-icons
+  :straight t
+  :config
+  ;; 设置 Treemacs 文件夹图标
+  (setq treemacs-icon-open (nerd-icons-icon-for-dir "folder-open"))
+  (setq treemacs-icon-closed (nerd-icons-icon-for-dir "folder")))
+
+;; Dired 图标
+(use-package nerd-icons-dired
+  :straight t
+  :hook (dired-mode . nerd-icons-dired-mode))
+
+;; -----------------------------
+;; Corfu + Kind-Icon
+;; -----------------------------
+(use-package kind-icon
+  :straight t
+  :after corfu
+  :custom
+  (kind-icon-use-icons t)
+  (kind-icon-default-face 'corfu-default)
+  :config
+  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
+
+
+;;; ------------------------------------------------------------
+;;; 启动完成
+;;; ------------------------------------------------------------
+(message "Init.el loaded successfully with icons, corfu, eglot, treemacs, catppuccin!")
 
 (provide 'init)
 ;;; init.el ends here
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages nil))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
