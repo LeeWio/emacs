@@ -218,6 +218,21 @@
   (define-key eglot-mode-map (kbd "C-c i") #'eglot-find-implementation)
   (define-key eglot-mode-map (kbd "C-c e") #'eglot-find-declaration))
 
+;; ------------------------------------------------------------
+;; Emacs Lisp — built-in Eglot LSP (NO external server)
+;; ------------------------------------------------------------
+
+;; Emacs Lisp 使用 Eglot 内置服务器
+(add-hook 'emacs-lisp-mode-hook #'eglot-ensure)
+
+(add-hook 'emacs-lisp-mode-hook
+          (lambda ()
+            ;; 和你 C/C++ 风格保持一致：安静、不打扰
+            (setq-local eldoc-mode nil
+                        eldoc-documentation-strategy nil
+                        eldoc-echo-area-use-multiline-p nil
+                        flymake-show-diagnostics-at-end-of-line nil)))
+
 
 ;;; ------------------------------------------------------------
 ;;; 项目浏览 / 模糊搜索 (Treemacs + Vertico + Consult)
