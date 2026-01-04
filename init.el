@@ -233,6 +233,21 @@
                         eldoc-echo-area-use-multiline-p nil
                         flymake-show-diagnostics-at-end-of-line nil)))
 
+;; ------------------------------------------------------------
+;; Java — Eglot + Homebrew jdtls (macOS)
+;; ------------------------------------------------------------
+
+(use-package eglot
+  :hook (java-mode . eglot-ensure)
+  :config
+  (add-to-list
+   'eglot-server-programs
+   `(java-mode .
+     ("jdtls"
+      ;; workspace（必须，不然经常 server died）
+      "-data" ,(expand-file-name "~/.cache/jdtls-workspace/")))))
+
+
 
 ;;; ------------------------------------------------------------
 ;;; 项目浏览 / 模糊搜索 (Treemacs + Vertico + Consult)
