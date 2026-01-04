@@ -380,6 +380,24 @@
   (global-set-key (kbd "C-x v s") 'git-gutter:stage-hunk)
   (global-set-key (kbd "C-x v r") 'git-gutter:revert-hunk))
 
+;;; ------------------------------------------------------------
+;;; Git Blame Inline (blamer.el)
+;;; ------------------------------------------------------------
+(use-package blamer
+  :ensure t
+  :bind (("s-i" . blamer-show-commit-info)
+         ("C-c i" . blamer-show-posframe-commit-info))
+  :defer 20
+  :custom
+  (blamer-idle-time 0.3)
+  (blamer-min-offset 70)
+  :custom-face
+  (blamer-face ((t :foreground "#7a88cf"
+                    :background nil
+                    :height 140
+                    :italic t)))
+  :config
+  (global-blamer-mode 1))
 
 ;;; ------------------------------------------------------------
 ;;; Clipboard integration (Wayland, X11, macOS, GUI)
