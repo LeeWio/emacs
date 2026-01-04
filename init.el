@@ -346,11 +346,40 @@
   :config
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
+;;; ------------------------------------------------------------
+;;; Git integration (Git Gutter)
+;;; ------------------------------------------------------------
 
-;;; ------------------------------------------------------------
-;;; 启动完成
-;;; ------------------------------------------------------------
-(message "Init.el loaded successfully with icons, corfu, eglot, treemacs, catppuccin!")
+;; -----------------------------
+;; Magit
+;; -----------------------------
+(use-package magit
+  :straight t
+  :bind (("C-x g" . magit-status)
+         ("C-x M-g" . magit-dispatch)))
+
+;; -----------------------------
+;; Git Gutter
+;; -----------------------------
+(use-package git-gutter
+  :straight t
+  :diminish
+  :hook (prog-mode . git-gutter-mode)
+  :config
+  ;; 自动刷新
+  (setq git-gutter:update-interval 2) ; 每 2 秒刷新一次
+  ;; 颜色和符号
+  (custom-set-faces
+   '(git-gutter:added    ((t (:foreground "#A6E3A1" :background nil :weight bold))))
+   '(git-gutter:modified ((t (:foreground "#F9E2AF" :background nil :weight bold))))
+   '(git-gutter:deleted  ((t (:foreground "#F38BA8" :background nil :weight bold)))))
+  ;; 快捷键
+  (global-set-key (kbd "C-x v =") 'git-gutter:popup-hunk)
+  (global-set-key (kbd "C-x p") 'git-gutter:previous-hunk)
+  (global-set-key (kbd "C-x n") 'git-gutter:next-hunk)
+  (global-set-key (kbd "C-x v s") 'git-gutter:stage-hunk)
+  (global-set-key (kbd "C-x v r") 'git-gutter:revert-hunk))
+
 
 ;;; ------------------------------------------------------------
 ;;; Clipboard integration (Wayland, X11, macOS, GUI)

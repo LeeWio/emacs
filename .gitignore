@@ -16,6 +16,7 @@ auto-save/
 # Package management
 elpa/
 straight/
+transient/
 !*.el  # Don't ignore elisp files
 
 # Emacs Native Compilation (Emacs 28+)
