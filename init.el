@@ -457,6 +457,34 @@
 ;; 自动执行
 (my/setup-clipboard)
 
+(use-package rg
+  :straight t)
+;; 在 Consult 中使用
+(setq consult-ripgrep-args "rg --no-heading --line-number --color=always %s")
+
+(use-package avy
+  :straight t
+  :bind ("C-:" . avy-goto-char-timer))
+
+(use-package all-the-icons-dired
+  :straight t
+  :hook (dired-mode . all-the-icons-dired-mode))
+
+(use-package centaur-tabs
+  :straight t
+  :init
+  (centaur-tabs-mode t)
+  :custom
+  (centaur-tabs-style "bar")
+  (centaur-tabs-set-icons t))
+
+(use-package doom-modeline
+  :straight t
+  :init (doom-modeline-mode 1)
+  :custom
+  (doom-modeline-height 25)
+  (doom-modeline-bar-width 5))
+
 
 (provide 'init)
 ;;; init.el ends here
