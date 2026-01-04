@@ -45,6 +45,14 @@
 (setq catppuccin-flavor 'mocha)
 (load-theme 'catppuccin :no-confirm)
 
+;; Set transparent backgrounds for faces
+(set-face-attribute 'default nil :background nil)
+(set-face-attribute 'fringe nil :background nil)
+(set-face-attribute 'line-number nil :background nil)
+(set-face-attribute 'line-number-current-line nil :background nil)
+(set-face-attribute 'mode-line nil :background nil)
+(set-face-attribute 'mode-line-inactive nil :background nil)
+
 ;;; ------------------------------------------------------------
 ;;; 基础编辑体验
 ;;; ------------------------------------------------------------
@@ -71,26 +79,11 @@
 
 (add-hook 'prog-mode-hook #'my/prog-mode-hook)
 
-;; Catppuccin 风格行号 & 光标 & 区域选择
-(let ((fg-line "#7f849c")
-      (fg-current "#fab387")
-      (bg-hl "#313244")
-      (bg-region "#585b70"))
-  (set-face-foreground 'line-number fg-line)
-  (set-face-foreground 'line-number-current-line fg-current)
-  (set-face-background 'line-number nil)
-  (set-face-background 'line-number-current-line nil)
-  (set-face-background 'hl-line bg-hl)
-  (set-face-background 'region bg-region)
-  (set-face-foreground 'cursor "#f5a97f"))
-
 ;;; ------------------------------------------------------------
 ;;; 清爽界面
 ;;; ------------------------------------------------------------
 (menu-bar-mode -1)
 (tool-bar-mode -1)
-(set-frame-parameter nil 'alpha '(90 . 90))
-(add-to-list 'default-frame-alist '(alpha . (90 . 90)))
 
 ;;; ------------------------------------------------------------
 ;;; Flymake 快捷键 (手动跳转)
@@ -361,3 +354,18 @@
 
 (provide 'init)
 ;;; init.el ends here
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(default ((t (:inherit nil :extend nil :stipple nil :background "unspecified" :foreground "#cdd6f4" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 1 :width normal :foundry "default" :family "default"))))
+ '(line-number ((t (:inherit default :background "unspecified" :foreground "#45475a"))))
+ '(mode-line ((t (:background "unspecified"))))
+ '(scroll-bar ((t nil))))
